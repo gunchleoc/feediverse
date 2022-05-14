@@ -47,7 +47,16 @@ def main():
     for feed in config['feeds']:
         if args.verbose:
             print(f"fetching {feed['url']} entries since {config['updated']}")
-        for entry in get_feed(feed['url'], config['updated']):
+        # Control whether we use updated or published for time comparison, to avoid spam
+        # from fequently updated items, e.g. from YouTube
+        if 'time' in config:
+            time_type = config['time']
+        else:
+            time_type = 'updated'
+        if time_type not in ['updated', 'published']:
+            raise RuntimeError('If set, "time" parameter must be "updated" or "published"')
+
+        for entry in get_feed(feed['url'], time_type, config['updated']):
             newest_post = max(newest_post, entry['updated'])
             if args.verbose:
                 print(entry)
@@ -60,17 +69,18 @@ def main():
         config['updated'] = newest_post.isoformat()
         save_config(config, config_file)
 
-def get_feed(feed_url, last_update):
+def get_feed(feed_url, time_type, last_update):
     feed = feedparser.parse(feed_url)
+
     # RSS feeds can contain future dates that we don't want to post yet,
     # so we filter them out
     now = datetime.now(timezone.utc)
     entries = [e for e in feed.entries
-               if dateutil.parser.parse(e['updated']) <= now]
+               if dateutil.parser.parse(e[time_type]) <= now]
     # Now we can filter for date normally
     if last_update:
         entries = [e for e in entries
-                   if dateutil.parser.parse(e['updated']) > last_update]
+                   if dateutil.parser.parse(e[time_type]) > last_update]
 
     entries.sort(key=lambda e: e.updated_parsed)
     for entry in entries:
@@ -93,6 +103,7 @@ def get_entry(entry):
         'summary': cleanup(summary),
         'content': content,
         'hashtags': ' '.join(hashtags),
+        'published': dateutil.parser.parse(entry['published']),
         'updated': dateutil.parser.parse(entry['updated'])
     }
 
@@ -166,6 +177,7 @@ def setup(config_file):
     config = {
         'name': name,
         'url': url,
+        'time': 'updated',
         'client_id': client_id,
         'client_secret': client_secret,
         'access_token': access_token,

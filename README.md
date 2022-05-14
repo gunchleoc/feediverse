@@ -16,9 +16,19 @@ you don't specify a config file it will use `~/.feediverse`:
 
 Once *feediverse* is configured you can add it to your crontab:
 
-    */15 * * * * /usr/local/bin/feediverse    
+    */15 * * * * /usr/local/bin/feediverse
 
 Run `feediverse --help` to show the command line options.
+
+## Tracking Updated vs. Published datetime
+
+By default, the time comparison for fetching posts is done from the `updated` RSS tag.
+If you need to change this to avoid spam from frequently updates items (e.g. from YouTube),
+you can change this with the parameter
+
+    time: published
+
+This can only be done per configuration file, not per feed.
 
 ## Post Format
 
