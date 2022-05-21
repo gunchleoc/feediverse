@@ -55,6 +55,14 @@ def main():
             time_type = 'updated'
         if time_type not in ['updated', 'published']:
             raise RuntimeError('If set, "time" parameter must be "updated" or "published"')
+        # Post visibility
+        if 'visibility' in config:
+            post_visibility = config['visibility']
+        else:
+            post_visibility = 'updated'
+
+        if post_visibility not in ['direct', 'private', 'unlisted', 'public']:
+            raise RuntimeError('If set, "visibility" parameter must be "direct", "private", "unlisted", or "public"')
 
         for entry in get_feed(feed['url'], time_type, config['updated']):
             newest_post = max(newest_post, entry['updated'])
@@ -63,7 +71,7 @@ def main():
             if args.dry_run:
                 print("trial run, not tooting ", entry["title"][:50])
                 continue
-            masto.status_post(feed['template'].format(**entry)[:499])
+            masto.status_post(feed['template'].format(**entry)[:499], visibility=post_visibility)
 
     if not args.dry_run:
         config['updated'] = newest_post.isoformat()
@@ -178,6 +186,7 @@ def setup(config_file):
         'name': name,
         'url': url,
         'time': 'updated',
+        'visibility': 'unlisted',
         'client_id': client_id,
         'client_secret': client_secret,
         'access_token': access_token,

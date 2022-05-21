@@ -24,11 +24,20 @@ Run `feediverse --help` to show the command line options.
 
 By default, the time comparison for fetching posts is done from the `updated` RSS tag.
 If you need to change this to avoid spam from frequently updates items (e.g. from YouTube),
-you can change this with the parameter
+you can change this with the property
 
     time: published
 
 This can only be done per configuration file, not per feed.
+
+# Visibility
+
+By default, posts will be unlisted. To change this, use the configuration property `visibility`, e.g.
+
+    visibility: public
+
+Available values are documented in the
+[https://github.com/halcy/Mastodon.py/blob/master/mastodon/Mastodon.py](Mastodon upstream project).
 
 ## Post Format
 
