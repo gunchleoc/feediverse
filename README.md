@@ -37,7 +37,7 @@ By default, posts will be unlisted. To change this, use the configuration proper
     visibility: public
 
 Available values are documented in the
-[https://github.com/halcy/Mastodon.py/blob/master/mastodon/Mastodon.py](Mastodon upstream project).
+[Mastodon upstream project](https://github.com/halcy/Mastodon.py/blob/master/mastodon/Mastodon.py).
 
 ## Post Format
 
