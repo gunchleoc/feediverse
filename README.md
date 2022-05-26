@@ -39,6 +39,49 @@ By default, posts will be unlisted. To change this, use the configuration proper
 Available values are documented in the
 [Mastodon upstream project](https://github.com/halcy/Mastodon.py/blob/master/mastodon/Mastodon.py).
 
+# Rewriting URLs
+
+The rewrite options can be used e.g. to swap links in the posts for more privacy-friendly options,
+or for load balancing on the feed source.
+Specify 1 source and multiple targets for random selection.
+Examples for using [Invidious instances](https://docs.invidious.io/instances/) instead of YouTube in posts:
+
+```
+rewrite_target:
+- source: https://www.youtube.com/
+  targets:
+  - text: https://invidious.snopyta.org/
+  - text: https://yewtu.be/
+  - text: https://invidious.kavin.rocks/
+  - text: https://invidious.namazso.eu/
+  - text: https://invidious.osi.kr/
+  - text: https://yt.artemislena.eu/
+  - text: https://tube.cthd.icu/
+  - text: https://invidious.flokinet.to/
+```
+
+And load balancing while sourcing from [Nitter instances](https://xnaas.github.io/nitter-instances/):
+
+```
+rewrite_source:
+- source: https://nitter.net/
+  targets:
+  - text: https://nitter.sethforprivacy.com/
+  - text: https://nitter.pussthecat.org/
+  - text: https://nitter.nixnet.services/
+  - text: https://nitter.namazso.eu/
+  - text: https://bird.trom.tf/
+  - text: https://nitter.grimneko.de/
+  - text: https://nitter.mstdn.social/
+  - text: https://nitter.weiler.rocks/
+  - text: https://tw.artemislena.eu/
+  - text: https://de.nttr.stream/
+  - text: https://nitter.privacy.com.de/
+  - text: https://nitter.notraxx.ch/
+  - text: https://nitter.lunar.icu/
+  - text: https://nitter.tiekoetter.com/
+```
+
 ## Post Format
 
 You can customize the post format by opening the configuration file (default is

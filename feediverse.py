@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import random
 import re
 import sys
 import yaml
@@ -44,9 +45,21 @@ def main():
     )
 
     newest_post = config['updated']
+
+    # Content rewrite
+    if 'rewrite_source' in config:
+        rewrite_source = config['rewrite_source']
+    else:
+        rewrite_source = []
+    if 'rewrite_target' in config:
+        rewrite_target = config['rewrite_target']
+    else:
+        rewrite_target = []
+
     for feed in config['feeds']:
+        feed_url = replace_text(feed['url'], rewrite_source)
         if args.verbose:
-            print(f"fetching {feed['url']} entries since {config['updated']}")
+            print(f"fetching {feed_url} entries since {config['updated']}")
         # Control whether we use updated or published for time comparison, to avoid spam
         # from fequently updated items, e.g. from YouTube
         if 'time' in config:
@@ -64,7 +77,7 @@ def main():
         if post_visibility not in ['direct', 'private', 'unlisted', 'public']:
             raise RuntimeError('If set, "visibility" parameter must be "direct", "private", "unlisted", or "public"')
 
-        for entry in get_feed(feed['url'], time_type, config['updated']):
+        for entry in get_feed(feed_url, time_type, config['updated'], rewrite_target):
             newest_post = max(newest_post, entry['updated'])
             if args.verbose:
                 print(entry)
@@ -77,7 +90,15 @@ def main():
         config['updated'] = newest_post.isoformat()
         save_config(config, config_file)
 
-def get_feed(feed_url, time_type, last_update):
+def replace_text(text, replacements):
+    """Replace text with random selection from target texts"""
+
+    for replacement in replacements:
+        target_index = random.randint(0, len(replacement['targets'])-1)
+        text = text.replace(replacement['source'], replacement['targets'][target_index]['text'])
+    return text
+
+def get_feed(feed_url, time_type, last_update, replacements):
     feed = feedparser.parse(feed_url)
 
     # RSS feeds can contain future dates that we don't want to post yet,
@@ -92,9 +113,9 @@ def get_feed(feed_url, time_type, last_update):
 
     entries.sort(key=lambda e: e.updated_parsed)
     for entry in entries:
-        yield get_entry(entry)
+        yield get_entry(entry, replacements)
 
-def get_entry(entry):
+def get_entry(entry, replacements):
     hashtags = []
     for tag in entry.get('tags', []):
         t = tag['term'].replace(' ', '_').replace('.', '').replace('-', '')
@@ -105,11 +126,11 @@ def get_entry(entry):
         content = cleanup(content[0].get('value', ''))
     url = entry.id
     return {
-        'url': url,
-        'link': entry.link,
-        'title': cleanup(entry.title),
-        'summary': cleanup(summary),
-        'content': content,
+        'url': replace_text(url, replacements),
+        'link': replace_text(entry.link, replacements),
+        'title': replace_text(cleanup(entry.title), replacements),
+        'summary': replace_text(cleanup(summary), replacements),
+        'content': replace_text(content, replacements),
         'hashtags': ' '.join(hashtags),
         'published': dateutil.parser.parse(entry['published']),
         'updated': dateutil.parser.parse(entry['updated'])
