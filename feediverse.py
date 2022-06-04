@@ -125,6 +125,9 @@ def get_entry(entry, replacements):
     if content:
         content = cleanup(content[0].get('value', ''))
     url = entry.id
+    # Fix for Pixelfed Atom that has no pulbished datetime
+    if not 'published' in entry:
+            entry['published'] = entry['updated']
     return {
         'url': replace_text(url, replacements),
         'link': replace_text(entry.link, replacements),
