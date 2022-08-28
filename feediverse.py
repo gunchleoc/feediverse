@@ -125,7 +125,7 @@ def get_entry(entry, replacements):
     if content:
         content = cleanup(content[0].get('value', ''))
     url = entry.id
-    # Fix for Pixelfed Atom that has no pulbished datetime
+    # Fix for Pixelfed Atom that has no published datetime
     if not 'published' in entry:
             entry['published'] = entry['updated']
     return {
