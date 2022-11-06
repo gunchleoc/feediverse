@@ -39,6 +39,13 @@ By default, posts will be unlisted. To change this, use the configuration proper
 Available values are documented in the
 [Mastodon upstream project](https://github.com/halcy/Mastodon.py/blob/master/mastodon/Mastodon.py).
 
+
+# Content Warnings
+
+You can CW all posts by adding the parameter:
+
+    cw: Spoiler Text
+
 # Rewriting URLs
 
 The rewrite options can be used e.g. to swap links in the posts for more privacy-friendly options,

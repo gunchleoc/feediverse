@@ -80,11 +80,11 @@ def main():
         for entry in get_feed(feed_url, time_type, config['updated'], rewrite_target):
             newest_post = max(newest_post, entry['updated'])
             if args.verbose:
-                print(entry)
+                print('Visibility:', post_visibility, 'CW:', config['cw'], entry)
             if args.dry_run:
                 print("trial run, not tooting ", entry["title"][:50])
                 continue
-            masto.status_post(feed['template'].format(**entry)[:499], visibility=post_visibility)
+            masto.status_post(feed['template'].format(**entry)[:499], visibility=post_visibility, spoiler_text = config['cw'])
 
     if not args.dry_run:
         config['updated'] = newest_post.isoformat()
