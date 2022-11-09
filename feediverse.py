@@ -91,8 +91,12 @@ def main():
             if args.dry_run:
                 print('trial run, not tooting ', entry['title'][:50])
                 continue
-            masto.status_post(feed['template'].format(
-                **entry)[:499], visibility=post_visibility, spoiler_text=config['cw'])
+            if 'cw' in config:
+                masto.status_post(feed['template'].format(
+                    **entry)[:499], visibility=post_visibility, spoiler_text=config['cw'])
+            else:
+                masto.status_post(feed['template'].format(
+                    **entry)[:499], visibility=post_visibility)
 
     if not args.dry_run:
         config['updated'] = newest_post.isoformat()
