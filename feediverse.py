@@ -83,7 +83,7 @@ def main():
         for entry in get_feed(feed_url, time_type, config['updated'], rewrite_target):
             newest_post = max(newest_post, entry['updated'])
             if args.verbose:
-                if config['cw']:
+                if 'cw' in config:
                     print('Visibility:', post_visibility,
                           'CW:', config['cw'], entry)
                 else:
