@@ -13,24 +13,25 @@ from bs4 import BeautifulSoup
 from mastodon import Mastodon
 from datetime import datetime, timezone, MINYEAR
 
-DEFAULT_CONFIG_FILE = os.path.join("~", ".feediverse")
+DEFAULT_CONFIG_FILE = os.path.join('~', '.feediverse')
+
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--dry-run", action="store_true",
-                        help=("perform a trial run with no changes made: "
+    parser.add_argument('-n', '--dry-run', action='store_true',
+                        help=('perform a trial run with no changes made: '
                               "don't toot, don't save config"))
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="be verbose")
-    parser.add_argument("-c", "--config",
-                        help="config file to use",
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='be verbose')
+    parser.add_argument('-c', '--config',
+                        help='config file to use',
                         default=os.path.expanduser(DEFAULT_CONFIG_FILE))
 
     args = parser.parse_args()
     config_file = args.config
 
     if args.verbose:
-        print("using config file", config_file)
+        print('using config file', config_file)
 
     if not os.path.isfile(config_file):
         setup(config_file)
@@ -67,7 +68,8 @@ def main():
         else:
             time_type = 'updated'
         if time_type not in ['updated', 'published']:
-            raise RuntimeError('If set, "time" parameter must be "updated" or "published"')
+            raise RuntimeError(
+                'If set, "time" parameter must be "updated" or "published"')
         # Post visibility
         if 'visibility' in config:
             post_visibility = config['visibility']
@@ -75,28 +77,37 @@ def main():
             post_visibility = 'updated'
 
         if post_visibility not in ['direct', 'private', 'unlisted', 'public']:
-            raise RuntimeError('If set, "visibility" parameter must be "direct", "private", "unlisted", or "public"')
+            raise RuntimeError(
+                'If set, "visibility" parameter must be "direct", "private", "unlisted", or "public"')
 
         for entry in get_feed(feed_url, time_type, config['updated'], rewrite_target):
             newest_post = max(newest_post, entry['updated'])
             if args.verbose:
-                print('Visibility:', post_visibility, 'CW:', config['cw'], entry)
+                if config['cw']:
+                    print('Visibility:', post_visibility,
+                          'CW:', config['cw'], entry)
+                else:
+                    print('Visibility:', post_visibility, entry)
             if args.dry_run:
-                print("trial run, not tooting ", entry["title"][:50])
+                print('trial run, not tooting ', entry['title'][:50])
                 continue
-            masto.status_post(feed['template'].format(**entry)[:499], visibility=post_visibility, spoiler_text = config['cw'])
+            masto.status_post(feed['template'].format(
+                **entry)[:499], visibility=post_visibility, spoiler_text=config['cw'])
 
     if not args.dry_run:
         config['updated'] = newest_post.isoformat()
         save_config(config, config_file)
 
+
 def replace_text(text, replacements):
-    """Replace text with random selection from target texts"""
+    """Replace text with random selection from target texts."""
 
     for replacement in replacements:
         target_index = random.randint(0, len(replacement['targets'])-1)
-        text = text.replace(replacement['source'], replacement['targets'][target_index]['text'])
+        text = text.replace(
+            replacement['source'], replacement['targets'][target_index]['text'])
     return text
+
 
 def get_feed(feed_url, time_type, last_update, replacements):
     feed = feedparser.parse(feed_url)
@@ -115,6 +126,7 @@ def get_feed(feed_url, time_type, last_update, replacements):
     for entry in entries:
         yield get_entry(entry, replacements)
 
+
 def get_entry(entry, replacements):
     hashtags = []
     for tag in entry.get('tags', []):
@@ -127,7 +139,7 @@ def get_entry(entry, replacements):
     url = entry.id
     # Fix for Pixelfed Atom that has no published datetime
     if not 'published' in entry:
-            entry['published'] = entry['updated']
+        entry['published'] = entry['updated']
     return {
         'url': replace_text(url, replacements),
         'link': replace_text(entry.link, replacements),
@@ -139,6 +151,7 @@ def get_entry(entry, replacements):
         'updated': dateutil.parser.parse(entry['updated'])
     }
 
+
 def cleanup(text):
     html = BeautifulSoup(text, 'html.parser')
     text = html.get_text()
@@ -148,28 +161,32 @@ def cleanup(text):
     text = re.sub('\n\n\n+', '\n\n', text, flags=re.M)
     return text.strip()
 
+
 def find_urls(html):
     if not html:
         return
     urls = []
     soup = BeautifulSoup(html, 'html.parser')
-    for tag in soup.find_all(["a", "img"]):
-        if tag.name == "a":
-            url = tag.get("href")
-        elif tag.name == "img":
-            url = tag.get("src")
+    for tag in soup.find_all(['a', 'img']):
+        if tag.name == 'a':
+            url = tag.get('href')
+        elif tag.name == 'img':
+            url = tag.get('src')
         if url and url not in urls:
             urls.append(url)
     return urls
 
+
 def yes_no(question):
     res = input(question + ' [y/n] ')
-    return res.lower() in "y1"
+    return res.lower() in 'y1'
+
 
 def save_config(config, config_file):
     copy = dict(config)
     with open(config_file, 'w') as fh:
         fh.write(yaml.dump(copy, default_flow_style=False))
+
 
 def read_config(config_file):
     config = {
@@ -181,6 +198,7 @@ def read_config(config_file):
             cfg['updated'] = dateutil.parser.parse(cfg['updated'])
     config.update(cfg)
     return config
+
 
 def setup(config_file):
     url = input('What is your Mastodon Instance URL? ')
@@ -201,7 +219,8 @@ def setup(config_file):
         )
         username = input('mastodon username (email): ')
         password = input('mastodon password (not stored): ')
-        m = Mastodon(client_id=client_id, client_secret=client_secret, api_base_url=url)
+        m = Mastodon(client_id=client_id,
+                     client_secret=client_secret, api_base_url=url)
         access_token = m.log_in(username, password)
 
     feed_url = input('RSS/Atom feed URL to watch: ')
@@ -221,11 +240,12 @@ def setup(config_file):
     if not old_posts:
         config['updated'] = datetime.now(tz=timezone.utc).isoformat()
     save_config(config, config_file)
-    print("")
-    print("Your feediverse configuration has been saved to {}".format(config_file))
-    print("Add a line line this to your crontab to check every 15 minutes:")
-    print("*/15 * * * * /usr/local/bin/feediverse")
-    print("")
+    print('')
+    print('Your feediverse configuration has been saved to {}'.format(config_file))
+    print('Add a line line this to your crontab to check every 15 minutes:')
+    print('*/15 * * * * /usr/local/bin/feediverse')
+    print('')
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
