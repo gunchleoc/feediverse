@@ -154,8 +154,8 @@ def get_entry(entry, replacements):
     if not 'published' in entry:
         entry['published'] = entry['updated']
     return {
-        'url': replace_text(url, replacements),
-        'link': replace_text(entry.link, replacements),
+        'url': replace_text(url, replacements).replace(' ', '+'),
+        'link': replace_text(entry.link, replacements).replace(' ', '+'),
         'title': replace_text(cleanup(entry.title), replacements),
         'summary': replace_text(cleanup(summary), replacements),
         'content': replace_text(content, replacements),
