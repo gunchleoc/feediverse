@@ -81,7 +81,10 @@ def main():
                 'If set, "visibility" parameter must be "direct", "private", "unlisted", or "public"')
 
         for entry in get_feed(feed_url, time_type, config['updated'], rewrite_target):
-            newest_post = max(newest_post, entry['updated'])
+            if newest_post.timestamp() > entry['updated'].timestamp():
+                newest_post = newest_post
+            else:
+                newest_post = entry['updated']
             if args.verbose:
                 if 'cw' in config:
                     print('Visibility:', post_visibility,
@@ -119,12 +122,13 @@ def get_feed(feed_url, time_type, last_update, replacements):
     # RSS feeds can contain future dates that we don't want to post yet,
     # so we filter them out
     now = datetime.now(timezone.utc)
+
     entries = [e for e in feed.entries
-               if dateutil.parser.parse(e[time_type]) <= now]
+               if dateutil.parser.parse(e[time_type]).timestamp() <= now.timestamp()]
     # Now we can filter for date normally
     if last_update:
         entries = [e for e in entries
-                   if dateutil.parser.parse(e[time_type]) > last_update]
+                   if dateutil.parser.parse(e[time_type]).timestamp() > last_update.timestamp()]
 
     entries.sort(key=lambda e: e.updated_parsed)
     for entry in entries:
@@ -140,7 +144,12 @@ def get_entry(entry, replacements):
     content = entry.get('content', '') or ''
     if content:
         content = cleanup(content[0].get('value', ''))
-    url = entry.id
+    if 'id' in entry:
+        url = entry.id
+    elif 'link' in entry:
+        url = entry.link
+    else:
+        url = ''
     # Fix for Pixelfed Atom that has no published datetime
     if not 'published' in entry:
         entry['published'] = entry['updated']
